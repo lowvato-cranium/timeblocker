@@ -1,0 +1,1 @@
+ALTER TABLE `tasks` ADD `active` integer DEFAULT false NOT NULL;

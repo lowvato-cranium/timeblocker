@@ -26,6 +26,11 @@ const columns = [
     filterFn: "equalsString",
     cell: (info) => STATUS_LABELS[info.getValue()],
   }),
+  columnHelper.accessor((row) => (row.active ? "Yes" : "No"), {
+    id: "active",
+    header: "Active",
+    filterFn: "equalsString",
+  }),
   columnHelper.accessor("createdAt", {
     header: "Started At",
     cell: (info) => formatDateTime(info.getValue()),
@@ -38,6 +43,13 @@ const columns = [
     id: "labels",
     header: "Labels",
   }),
+  columnHelper.accessor(
+    (row) =>
+      row.sessions
+        .map((s) => `${formatDateTime(s.startedAt)}–${s.endedAt ? formatDateTime(s.endedAt) : "ongoing"}`)
+        .join(", "),
+    { id: "sessions", header: "Sessions" }
+  ),
 ];
 
 function ColumnFilter({ column }: { column: Column<Task, unknown> }) {

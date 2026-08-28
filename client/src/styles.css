@@ -189,6 +189,22 @@ select:focus {
   margin-top: 0;
 }
 
+.task-group {
+  margin-bottom: 1.75rem;
+}
+
+.task-group:last-child {
+  margin-bottom: 0;
+}
+
+.task-group h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+}
+
 .task-list {
   list-style: none;
   margin: 0;
@@ -221,10 +237,25 @@ select:focus {
   border-left-color: var(--text-muted);
 }
 
+.task-row.status-in_process {
+  border-left-color: var(--accent);
+}
+
+.task-row.status-rejected {
+  border-left-color: var(--danger);
+}
+
 .task-row-main {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.task-active-checkbox {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  accent-color: var(--accent);
 }
 
 .task-description {
@@ -249,6 +280,10 @@ select:focus {
 .task-remove:hover {
   color: var(--danger);
   border: none;
+}
+
+.task-sessions-summary {
+  font-size: 0.8rem;
 }
 
 .task-labels {
@@ -410,6 +445,38 @@ select:focus {
 
 .timer-settings input {
   width: 5rem;
+}
+
+.timer-phase-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.timer-phase-btn {
+  font-size: 0.85rem;
+  padding: 0.5rem 0.85rem;
+}
+
+.timer-phase-btn.phase-work:hover,
+.timer-phase-btn.phase-work.active {
+  border-color: var(--accent);
+}
+
+.timer-phase-btn.phase-work.active {
+  background: var(--accent-dim);
+  color: var(--text);
+}
+
+.timer-phase-btn.phase-other:hover,
+.timer-phase-btn.phase-other.active {
+  border-color: var(--warning);
+}
+
+.timer-phase-btn.phase-other.active {
+  background: var(--warning);
+  color: #241a02;
+  font-weight: 600;
 }
 
 .timer-display {

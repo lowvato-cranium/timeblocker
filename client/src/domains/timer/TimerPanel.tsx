@@ -1,11 +1,14 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { timerApi } from "./api";
-import type { TimerSettings } from "./types";
+import type { TimerPhase, TimerSettings } from "./types";
 import { useTimer } from "./useTimer";
 
 interface Props {
   onAddTask: (description: string) => Promise<void>;
   onTimerEnd?: () => void;
+  onWorkStart?: () => void;
+  onWorkEnd?: () => void;
+  onPhaseChange?: (phase: TimerPhase) => void;
 }
 
 const DEFAULT_SETTINGS: TimerSettings = { workMinutes: 25, otherMinutes: 5 };
@@ -16,7 +19,7 @@ function formatTime(totalSeconds: number) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-export function TimerPanel({ onAddTask, onTimerEnd }: Props) {
+export function TimerPanel({ onAddTask, onTimerEnd, onWorkStart, onWorkEnd, onPhaseChange }: Props) {
   const [settings, setSettings] = useState<TimerSettings>(DEFAULT_SETTINGS);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [description, setDescription] = useState("");
@@ -29,8 +32,12 @@ export function TimerPanel({ onAddTask, onTimerEnd }: Props) {
     });
   }, []);
 
-  const { phase, secondsLeft, start, stop } = useTimer({ ...settings, onTimerEnd });
+  const { phase, secondsLeft, startWork, startOther, stop } = useTimer({ ...settings, onTimerEnd, onWorkStart, onWorkEnd });
   const running = phase !== "idle";
+
+  useEffect(() => {
+    onPhaseChange?.(phase);
+  }, [phase, onPhaseChange]);
 
   async function handleSettingsChange(field: keyof TimerSettings, value: number) {
     if (!Number.isFinite(value)) return;
@@ -79,6 +86,24 @@ export function TimerPanel({ onAddTask, onTimerEnd }: Props) {
             onChange={(e) => handleSettingsChange("otherMinutes", Number(e.target.value))}
           />
         </label>
+        <div className="timer-phase-actions">
+          <button
+            type="button"
+            className={`timer-phase-btn phase-work${phase === "work" ? " active" : ""}`}
+            onClick={startWork}
+            disabled={!settingsLoaded}
+          >
+            Start Work Timer
+          </button>
+          <button
+            type="button"
+            className={`timer-phase-btn phase-other${phase === "other" ? " active" : ""}`}
+            onClick={startOther}
+            disabled={!settingsLoaded}
+          >
+            Start Other Timer
+          </button>
+        </div>
         {savingSettings && <span className="muted">Saving...</span>}
       </div>
 
@@ -92,11 +117,6 @@ export function TimerPanel({ onAddTask, onTimerEnd }: Props) {
       </div>
 
       <div className="timer-controls">
-        {!running && (
-          <button className="primary" onClick={start} disabled={!settingsLoaded}>
-            Start
-          </button>
-        )}
         {running && (
           <button className="danger" onClick={stop}>
             Stop

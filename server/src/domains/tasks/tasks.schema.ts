@@ -12,6 +12,7 @@ export const tasks = sqliteTable(
     description: text("description").notNull(),
     notes: text("notes").notNull().default(""),
     status: text("status", { enum: TASK_STATUSES }).notNull().default("incomplete"),
+    active: integer("active", { mode: "boolean" }).notNull().default(false),
     createdAt: integer("created_at").notNull(),
     updatedAt: integer("updated_at").notNull(),
     // Nullable at the DB level so adding this column to existing rows needs
@@ -20,4 +21,19 @@ export const tasks = sqliteTable(
     statusChangedAt: integer("status_changed_at"),
   },
   (table) => [index("tasks_user_idx").on(table.userId)]
+);
+
+// One row per work interval on a task (opened while active + Work phase
+// running, closed when either stops) — a task can have many over its lifetime.
+export const taskSessions = sqliteTable(
+  "task_sessions",
+  {
+    id: text("id").primaryKey(),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => tasks.id, { onDelete: "cascade" }),
+    startedAt: integer("started_at").notNull(),
+    endedAt: integer("ended_at"),
+  },
+  (table) => [index("task_sessions_task_idx").on(table.taskId)]
 );

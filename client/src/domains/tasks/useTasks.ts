@@ -38,5 +38,44 @@ export function useTasks() {
     setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, labels } : t)));
   }, []);
 
-  return { tasks, loading, addTask, updateTask, removeTask, addLabel, removeLabel };
+  const setActive = useCallback(async (id: string, active: boolean) => {
+    const task = await tasksApi.update(id, { active });
+    setTasks((prev) => prev.map((t) => (t.id === id ? task : t)));
+  }, []);
+
+  // Single-task session control — for toggling Active mid-Work-phase.
+  const startSession = useCallback(async (taskId: string) => {
+    const sessions = await tasksApi.startSession(taskId);
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, sessions } : t)));
+  }, []);
+
+  const stopSession = useCallback(async (taskId: string) => {
+    const sessions = await tasksApi.stopSession(taskId);
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, sessions } : t)));
+  }, []);
+
+  // Bulk session control — tied to the Focus Timer's Work phase itself
+  // starting/ending, applying to every currently Active task at once.
+  const startActiveSessions = useCallback(async () => {
+    setTasks(await tasksApi.startActiveSessions());
+  }, []);
+
+  const stopActiveSessions = useCallback(async () => {
+    setTasks(await tasksApi.stopActiveSessions());
+  }, []);
+
+  return {
+    tasks,
+    loading,
+    addTask,
+    updateTask,
+    removeTask,
+    addLabel,
+    removeLabel,
+    setActive,
+    startSession,
+    stopSession,
+    startActiveSessions,
+    stopActiveSessions,
+  };
 }
