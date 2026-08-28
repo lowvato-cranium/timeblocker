@@ -34,6 +34,10 @@ const columns = [
     header: "Status Changed At",
     cell: (info) => formatDateTime(info.getValue()),
   }),
+  columnHelper.accessor((row) => row.labels.map((label) => `${label.key}:${label.value}`).join(", "), {
+    id: "labels",
+    header: "Labels",
+  }),
 ];
 
 function ColumnFilter({ column }: { column: Column<Task, unknown> }) {

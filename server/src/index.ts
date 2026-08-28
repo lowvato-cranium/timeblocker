@@ -8,6 +8,7 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import { CORS_ORIGIN, IS_PRODUCTION, PORT } from "./config.js";
 import { authRouter } from "./domains/auth/auth.routes.js";
+import { labelsRouter } from "./domains/labels/labels.routes.js";
 import { tasksRouter } from "./domains/tasks/tasks.routes.js";
 import { timerRouter } from "./domains/timer/timer.routes.js";
 import { AppError } from "./shared/errors.js";
@@ -29,6 +30,7 @@ app.use("/api/auth/login", loginLimiter);
 app.use("/api/auth", authRouter);
 app.use("/api/tasks", tasksRouter);
 app.use("/api/timer", timerRouter);
+app.use("/api/labels", labelsRouter);
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true });

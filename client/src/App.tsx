@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth, type AuthUser } from "./domains/auth/AuthContext";
 import { LoginPage } from "./domains/auth/LoginPage";
+import { useLabelCatalog } from "./domains/labels/useLabelCatalog";
 import { RecentActivityPanel } from "./domains/tasks/RecentActivityPanel";
 import { ReportsPage } from "./domains/tasks/ReportsPage";
 import { TaskList } from "./domains/tasks/TaskList";
@@ -12,7 +13,8 @@ import { TimerPanel } from "./domains/timer/TimerPanel";
 // (useTasks, TimerPanel's settings load) run after the session exists
 // instead of racing the initial /auth/me check.
 function AuthenticatedApp({ user, onLogout }: { user: AuthUser; onLogout: () => void }) {
-  const { tasks, loading: tasksLoading, addTask, updateTask, removeTask } = useTasks();
+  const { tasks, loading: tasksLoading, addTask, updateTask, removeTask, addLabel, removeLabel } = useTasks();
+  const { labels: labelCatalog, refresh: refreshLabelCatalog } = useLabelCatalog();
 
   // Each timer phase (work or "other things") ending is a natural save
   // point: blur whatever field is focused so an in-progress notes edit
@@ -21,6 +23,16 @@ function AuthenticatedApp({ user, onLogout }: { user: AuthUser; onLogout: () => 
     const active = document.activeElement;
     if (active instanceof HTMLElement) active.blur();
   }, []);
+
+  // Refresh the shared catalog after adding a label in case the picker's
+  // "<new>" option just created one — every task's picker should see it.
+  const handleAddLabel = useCallback(
+    async (taskId: string, key: string, value: string) => {
+      await addLabel(taskId, key, value);
+      refreshLabelCatalog();
+    },
+    [addLabel, refreshLabelCatalog]
+  );
 
   return (
     <div className="app-shell">
@@ -35,7 +47,15 @@ function AuthenticatedApp({ user, onLogout }: { user: AuthUser; onLogout: () => 
         </div>
       </header>
       <main className="app-main">
-        <TaskList tasks={tasks} loading={tasksLoading} onUpdate={updateTask} onRemove={removeTask} />
+        <TaskList
+          tasks={tasks}
+          loading={tasksLoading}
+          labelCatalog={labelCatalog}
+          onUpdate={updateTask}
+          onRemove={removeTask}
+          onAddLabel={handleAddLabel}
+          onRemoveLabel={removeLabel}
+        />
         <TimerPanel onAddTask={addTask} onTimerEnd={handleTimerEnd} />
       </main>
       <RecentActivityPanel tasks={tasks} />

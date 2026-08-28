@@ -1,14 +1,22 @@
-import { useState, type ChangeEvent } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
+import { LabelPicker } from "../labels/LabelPicker";
+import type { Label } from "../labels/types";
 import { STATUS_LABELS, type Task, type TaskStatus } from "./types";
 
 interface Props {
   task: Task;
+  labelCatalog: Label[];
   onUpdate: (id: string, patch: Partial<{ notes: string; status: TaskStatus }>) => void;
   onRemove: (id: string) => void;
+  onAddLabel: (taskId: string, key: string, value: string) => void;
+  onRemoveLabel: (taskId: string, labelId: string) => void;
 }
 
-export function TaskRow({ task, onUpdate, onRemove }: Props) {
+export function TaskRow({ task, labelCatalog, onUpdate, onRemove, onAddLabel, onRemoveLabel }: Props) {
   const [notes, setNotes] = useState(task.notes);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const appliedLabelIds = useMemo(() => new Set(task.labels.map((l) => l.id)), [task.labels]);
 
   function handleStatusChange(e: ChangeEvent<HTMLSelectElement>) {
     onUpdate(task.id, { status: e.target.value as TaskStatus });
@@ -33,6 +41,39 @@ export function TaskRow({ task, onUpdate, onRemove }: Props) {
           ×
         </button>
       </div>
+
+      <div className="task-labels">
+        {task.labels.map((label) => (
+          <span key={label.id} className="label-chip">
+            {label.key}:{label.value}
+            <button
+              type="button"
+              className="label-chip-remove"
+              onClick={() => onRemoveLabel(task.id, label.id)}
+              aria-label={`Remove label ${label.key}:${label.value}`}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        <div className="label-add-wrap">
+          <button type="button" className="label-add-btn" onClick={() => setPickerOpen((v) => !v)}>
+            + Label
+          </button>
+          {pickerOpen && (
+            <LabelPicker
+              labels={labelCatalog}
+              excludeIds={appliedLabelIds}
+              onSelect={(key, value) => {
+                onAddLabel(task.id, key, value);
+                setPickerOpen(false);
+              }}
+              onClose={() => setPickerOpen(false)}
+            />
+          )}
+        </div>
+      </div>
+
       <textarea
         className="task-notes"
         placeholder="Notes..."

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { labelsApi } from "../labels/api";
 import { tasksApi } from "./api";
 import type { Task, TaskStatus } from "./types";
 
@@ -27,5 +28,15 @@ export function useTasks() {
     setTasks((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  return { tasks, loading, addTask, updateTask, removeTask };
+  const addLabel = useCallback(async (taskId: string, key: string, value: string) => {
+    const labels = await labelsApi.attach(taskId, key, value);
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, labels } : t)));
+  }, []);
+
+  const removeLabel = useCallback(async (taskId: string, labelId: string) => {
+    const labels = await labelsApi.detach(taskId, labelId);
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, labels } : t)));
+  }, []);
+
+  return { tasks, loading, addTask, updateTask, removeTask, addLabel, removeLabel };
 }

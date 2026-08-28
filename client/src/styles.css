@@ -251,6 +251,122 @@ select:focus {
   border: none;
 }
 
+.task-labels {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.label-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--accent-dim);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.15rem 0.4rem 0.15rem 0.65rem;
+  font-size: 0.8rem;
+}
+
+.label-chip-remove {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0 0.25rem;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.label-chip-remove:hover {
+  color: var(--danger);
+  border: none;
+}
+
+.label-add-wrap {
+  position: relative;
+}
+
+.label-add-btn {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.6rem;
+  color: var(--text-muted);
+  background: transparent;
+}
+
+.label-picker {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  z-index: 10;
+  min-width: 200px;
+  max-height: 260px;
+  overflow-y: auto;
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  padding: 0.35rem;
+}
+
+.label-picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.label-picker-list button {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 0.35rem 0.5rem;
+  border-radius: 5px;
+  font-size: 0.85rem;
+}
+
+.label-picker-list button:hover {
+  background: var(--panel);
+  border: none;
+}
+
+.label-picker-empty {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+}
+
+.label-picker-new {
+  border-top: 1px solid var(--border);
+  margin-top: 0.15rem;
+  padding-top: 0.15rem;
+}
+
+.label-picker-new-btn {
+  color: var(--accent);
+  font-style: italic;
+}
+
+.label-picker-new form {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.25rem 0.35rem;
+}
+
+.label-picker-new input {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.5rem;
+}
+
+.label-picker-new button[type="submit"] {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.6rem;
+}
+
 .task-notes {
   width: 100%;
   min-height: 2.5rem;

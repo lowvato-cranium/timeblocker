@@ -1,3 +1,5 @@
+import type { Label } from "../labels/types";
+
 export const TASK_STATUSES = ["incomplete", "not_started", "complete"] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
@@ -16,4 +18,5 @@ export interface Task {
   createdAt: number;
   updatedAt: number;
   statusChangedAt: number;
+  labels: Label[];
 }

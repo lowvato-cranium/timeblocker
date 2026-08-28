@@ -8,6 +8,12 @@ export const tasksService = {
     return tasksRepository.listByUser(userId);
   },
 
+  getOwned(userId: string, id: string) {
+    const task = tasksRepository.findById(id, userId);
+    if (!task) throw new NotFoundError("Task not found");
+    return task;
+  },
+
   create(userId: string, description: string) {
     const trimmed = description.trim();
     if (!trimmed) throw new ValidationError("Task description is required");
