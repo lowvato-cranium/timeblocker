@@ -1,0 +1,21 @@
+{
+  "name": "timeblocker",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"npm:dev -w server\" \"npm:dev -w client\"",
+    "build": "npm run build -w server && npm run build -w client",
+    "start": "npm run start -w server",
+    "db:generate": "npm run db:generate -w server",
+    "db:studio": "npm run db:studio -w server",
+    "user:create": "npm run user:create -w server --"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1",
+    "drizzle-orm": "^0.45.2"
+  }
+}
