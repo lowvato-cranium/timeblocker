@@ -318,7 +318,10 @@ select:focus {
   gap: 0.15rem;
 }
 
-.label-picker-list button {
+/* Direct button children only — the option rows and the "<new>" toggle.
+   Deliberately excludes the "Add" submit button nested in the new-label
+   form (li > form > button), which needs its own natural width. */
+.label-picker-list > li > button {
   width: 100%;
   text-align: left;
   border: none;
@@ -328,7 +331,7 @@ select:focus {
   font-size: 0.85rem;
 }
 
-.label-picker-list button:hover {
+.label-picker-list > li > button:hover {
   background: var(--panel);
   border: none;
 }
@@ -363,6 +366,8 @@ select:focus {
 }
 
 .label-picker-new button[type="submit"] {
+  width: auto;
+  flex-shrink: 0;
   font-size: 0.8rem;
   padding: 0.3rem 0.6rem;
 }
