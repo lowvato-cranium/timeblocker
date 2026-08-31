@@ -13,6 +13,8 @@ export const tasksApi = {
     api.post<{ sessions: TaskSession[] }>(`/tasks/${taskId}/sessions/start`).then((r) => r.sessions),
   stopSession: (taskId: string) =>
     api.post<{ sessions: TaskSession[] }>(`/tasks/${taskId}/sessions/stop`).then((r) => r.sessions),
+  addSession: (taskId: string, startedAt: number, endedAt: number) =>
+    api.post<{ sessions: TaskSession[] }>(`/tasks/${taskId}/sessions`, { startedAt, endedAt }).then((r) => r.sessions),
 
   // Bulk session control, tied to the Focus Timer's Work phase starting/ending.
   startActiveSessions: () => api.post<{ tasks: Task[] }>("/tasks/sessions/start-active").then((r) => r.tasks),

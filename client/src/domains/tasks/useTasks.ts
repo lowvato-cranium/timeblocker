@@ -18,10 +18,13 @@ export function useTasks() {
     setTasks((prev) => [task, ...prev]);
   }, []);
 
-  const updateTask = useCallback(async (id: string, patch: Partial<{ notes: string; status: TaskStatus }>) => {
-    const task = await tasksApi.update(id, patch);
-    setTasks((prev) => prev.map((t) => (t.id === id ? task : t)));
-  }, []);
+  const updateTask = useCallback(
+    async (id: string, patch: Partial<{ notes: string; status: TaskStatus; description: string }>) => {
+      const task = await tasksApi.update(id, patch);
+      setTasks((prev) => prev.map((t) => (t.id === id ? task : t)));
+    },
+    []
+  );
 
   const removeTask = useCallback(async (id: string) => {
     await tasksApi.remove(id);
@@ -54,6 +57,12 @@ export function useTasks() {
     setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, sessions } : t)));
   }, []);
 
+  // A manually-entered, already-completed session from the task editor.
+  const addSession = useCallback(async (taskId: string, startedAt: number, endedAt: number) => {
+    const sessions = await tasksApi.addSession(taskId, startedAt, endedAt);
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, sessions } : t)));
+  }, []);
+
   // Bulk session control — tied to the Focus Timer's Work phase itself
   // starting/ending, applying to every currently Active task at once.
   const startActiveSessions = useCallback(async () => {
@@ -75,6 +84,7 @@ export function useTasks() {
     setActive,
     startSession,
     stopSession,
+    addSession,
     startActiveSessions,
     stopActiveSessions,
   };

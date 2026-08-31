@@ -108,3 +108,15 @@ tasksRouter.post(
     res.json({ sessions });
   })
 );
+
+// Manually log a completed session (e.g. retroactively, without ever
+// toggling Active) — from the task editor modal.
+tasksRouter.post(
+  "/:id/sessions",
+  asyncHandler(async (req, res) => {
+    const task = tasksService.getOwned(req.user!.id, req.params.id);
+    const { startedAt, endedAt } = req.body ?? {};
+    const sessions = tasksService.addManualSession(task.id, Number(startedAt), Number(endedAt));
+    res.json({ sessions });
+  })
+);

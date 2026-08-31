@@ -7,11 +7,12 @@ interface Props {
   tasks: Task[];
   loading: boolean;
   labelCatalog: Label[];
-  onUpdate: (id: string, patch: Partial<{ notes: string; status: TaskStatus }>) => void;
+  onUpdate: (id: string, patch: Partial<{ notes: string; status: TaskStatus; description: string }>) => Promise<void>;
   onRemove: (id: string) => void;
   onAddLabel: (taskId: string, key: string, value: string) => void;
   onRemoveLabel: (taskId: string, labelId: string) => void;
   onSetActive: (taskId: string, active: boolean) => void;
+  onAddSession: (taskId: string, startedAt: number, endedAt: number) => Promise<void>;
 }
 
 function TaskGroup({
@@ -40,7 +41,17 @@ function TaskGroup({
   );
 }
 
-export function TaskList({ tasks, loading, labelCatalog, onUpdate, onRemove, onAddLabel, onRemoveLabel, onSetActive }: Props) {
+export function TaskList({
+  tasks,
+  loading,
+  labelCatalog,
+  onUpdate,
+  onRemove,
+  onAddLabel,
+  onRemoveLabel,
+  onSetActive,
+  onAddSession,
+}: Props) {
   // Active: every task with the Active checkbox on, regardless of status.
   // Inactive: everything else, except Complete and Rejected/Won't Do —
   // those drop out of both panels once they're done or discarded.
@@ -50,7 +61,7 @@ export function TaskList({ tasks, loading, labelCatalog, onUpdate, onRemove, onA
     [tasks]
   );
 
-  const rowProps = { labelCatalog, onUpdate, onRemove, onAddLabel, onRemoveLabel, onSetActive };
+  const rowProps = { labelCatalog, onUpdate, onRemove, onAddLabel, onRemoveLabel, onSetActive, onAddSession };
 
   return (
     <section className="task-list-panel">

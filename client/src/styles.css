@@ -282,6 +282,24 @@ select:focus {
   border: none;
 }
 
+.task-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0.3rem;
+  border-radius: 5px;
+  line-height: 1;
+}
+
+.task-edit-btn:hover {
+  color: var(--accent);
+  border: none;
+  background: var(--panel-alt);
+}
+
 .task-sessions-summary {
   font-size: 0.8rem;
 }
@@ -477,6 +495,99 @@ select:focus {
   background: var(--warning);
   color: #241a02;
   font-weight: 600;
+}
+
+.notification-settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  padding: 0.75rem 1rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.notification-settings-label {
+  color: var(--text-muted);
+}
+
+.notification-mode-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+}
+
+.notification-mode-option {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.notification-mode-option input {
+  accent-color: var(--accent);
+}
+
+.sound-settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.sound-settings button {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.6rem;
+}
+
+.sound-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.8rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-alt);
+  cursor: pointer;
+}
+
+.sound-upload-btn:hover {
+  border-color: var(--accent);
+}
+
+.sound-settings .error {
+  width: 100%;
+  font-size: 0.8rem;
+}
+
+/* Ambient "throbbing" background pulse — 15s before/after a natural phase
+   boundary when the notification mode is "pulse". Applied to <body> so it
+   reads as an ambient cue regardless of which panel is in view. */
+@keyframes timer-pulse-bg {
+  0%,
+  100% {
+    background-color: var(--bg);
+  }
+  50% {
+    background-color: var(--pulse-color, var(--bg));
+  }
+}
+
+body.timer-pulse {
+  animation: timer-pulse-bg 2s ease-in-out infinite;
+}
+
+body.timer-pulse-work {
+  --pulse-color: color-mix(in srgb, var(--bg) 55%, var(--accent) 45%);
+}
+
+body.timer-pulse-other {
+  --pulse-color: color-mix(in srgb, var(--bg) 55%, var(--warning) 45%);
 }
 
 .timer-display {
@@ -701,4 +812,124 @@ select:focus {
   margin-top: 0.35rem;
   font-size: 0.8rem;
   padding: 0.25rem 0.4rem;
+}
+
+/* Task edit modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 100;
+}
+
+.modal-dialog {
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.modal-close {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.3rem;
+  line-height: 1;
+  padding: 0.1rem 0.4rem;
+}
+
+.modal-close:hover {
+  color: var(--text);
+  border: none;
+}
+
+.modal-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.modal-field input,
+.modal-field textarea {
+  width: 100%;
+}
+
+.modal-sessions {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.modal-sessions h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.modal-session-list {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.modal-add-session-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem;
+}
+
+.modal-add-session-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border);
 }

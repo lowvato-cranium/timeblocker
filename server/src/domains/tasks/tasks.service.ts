@@ -106,6 +106,20 @@ export const tasksService = {
     return tasksRepository.listSessionsForTask(taskId);
   },
 
+  // A manually-entered session (e.g. retroactively logging time worked
+  // without the Active checkbox on) — both endpoints are required, unlike
+  // startSession/stopSession which record an in-progress interval.
+  addManualSession(taskId: string, startedAt: number, endedAt: number) {
+    if (!Number.isFinite(startedAt) || !Number.isFinite(endedAt)) {
+      throw new ValidationError("startedAt and endedAt must be valid timestamps");
+    }
+    if (endedAt <= startedAt) {
+      throw new ValidationError("endedAt must be after startedAt");
+    }
+    tasksRepository.createSession({ id: nanoid(), taskId, startedAt, endedAt });
+    return tasksRepository.listSessionsForTask(taskId);
+  },
+
   // Bulk session control — used when the Focus Timer's Work phase itself
   // starts or ends, applying to every task currently marked Active.
   startActiveSessions(userId: string) {

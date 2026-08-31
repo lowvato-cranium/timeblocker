@@ -69,7 +69,7 @@ export const tasksRepository = {
       .get();
   },
 
-  createSession(session: { id: string; taskId: string; startedAt: number }) {
+  createSession(session: { id: string; taskId: string; startedAt: number; endedAt?: number }) {
     db.insert(taskSessions).values(session).run();
   },
 

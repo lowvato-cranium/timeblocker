@@ -25,6 +25,7 @@ function AuthenticatedApp({ user, onLogout }: { user: AuthUser; onLogout: () => 
     setActive,
     startSession,
     stopSession,
+    addSession,
     startActiveSessions,
     stopActiveSessions,
   } = useTasks();
@@ -103,6 +104,7 @@ function AuthenticatedApp({ user, onLogout }: { user: AuthUser; onLogout: () => 
           onAddLabel={handleAddLabel}
           onRemoveLabel={removeLabel}
           onSetActive={handleSetActive}
+          onAddSession={addSession}
         />
         <TimerPanel
           onAddTask={addTask}
