@@ -25,6 +25,45 @@ function PencilIcon() {
   );
 }
 
+// A single horizontal bar — the "shrink" affordance shown while a task is
+// expanded, evoking a minimize control.
+function CollapseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+      <rect x="4" y="11" width="16" height="2" rx="1" />
+    </svg>
+  );
+}
+
+// An outlined square — the "expand" affordance shown while a task is
+// collapsed, evoking a maximize control.
+function ExpandIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="5" y="5" width="14" height="14" rx="2" />
+    </svg>
+  );
+}
+
+// Maps the leading number of a "priority:<n>-<label>" value (e.g. "1-High")
+// to the top-bar color it should render. Any priority value that doesn't
+// start with one of these digits (or a task with no priority label at all)
+// gets no special top bar — just the default thin border.
+const PRIORITY_BAR_CLASS: Record<string, string> = {
+  "1": "priority-1", // High — red
+  "2": "priority-2", // Medium — amber
+  "3": "priority-3", // Low — grey
+  "5": "priority-5", // Recurring — blue
+};
+
+function getPriorityBarClass(task: Task): string | null {
+  const priorityLabel = task.labels.find((l) => l.key === "priority");
+  if (!priorityLabel) return null;
+  const match = priorityLabel.value.match(/^(\d+)/);
+  if (!match) return null;
+  return PRIORITY_BAR_CLASS[match[1]] ?? null;
+}
+
 export function TaskRow({
   task,
   labelCatalog,
@@ -38,12 +77,14 @@ export function TaskRow({
   const [notes, setNotes] = useState(task.notes);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   // Keeps the inline textarea in sync when notes change from elsewhere —
   // namely a save from the edit modal.
   useEffect(() => setNotes(task.notes), [task.notes]);
 
   const appliedLabelIds = useMemo(() => new Set(task.labels.map((l) => l.id)), [task.labels]);
+  const priorityBarClass = useMemo(() => getPriorityBarClass(task), [task.labels]);
 
   const sessionSummary = useMemo(() => {
     if (task.sessions.length === 0) return null;
@@ -61,8 +102,17 @@ export function TaskRow({
     if (notes !== task.notes) onUpdate(task.id, { notes });
   }
 
+  const rowClassName = [
+    "task-row",
+    `status-${task.status}`,
+    priorityBarClass,
+    collapsed ? "task-row-collapsed" : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <li className={`task-row status-${task.status}`}>
+    <li className={rowClassName}>
       <div className="task-row-main">
         <input
           type="checkbox"
@@ -86,55 +136,68 @@ export function TaskRow({
         <button type="button" className="task-edit-btn" onClick={() => setEditOpen(true)} aria-label="Edit task">
           <PencilIcon />
         </button>
+        <button
+          type="button"
+          className="task-collapse-btn"
+          onClick={() => setCollapsed((v) => !v)}
+          aria-label={collapsed ? "Expand task" : "Collapse task"}
+          title={collapsed ? "Expand" : "Collapse"}
+        >
+          {collapsed ? <ExpandIcon /> : <CollapseIcon />}
+        </button>
       </div>
 
-      {sessionSummary && (
-        <div className="task-sessions-summary muted">
-          {sessionSummary.count} {sessionSummary.count === 1 ? "session" : "sessions"} ·{" "}
-          {formatDuration(sessionSummary.totalMs)}
-          {sessionSummary.hasOpenSession && " (in progress)"}
-        </div>
-      )}
-
-      <div className="task-labels">
-        {task.labels.map((label) => (
-          <span key={label.id} className="label-chip">
-            {label.key}:{label.value}
-            <button
-              type="button"
-              className="label-chip-remove"
-              onClick={() => onRemoveLabel(task.id, label.id)}
-              aria-label={`Remove label ${label.key}:${label.value}`}
-            >
-              ×
-            </button>
-          </span>
-        ))}
-        <div className="label-add-wrap">
-          <button type="button" className="label-add-btn" onClick={() => setPickerOpen((v) => !v)}>
-            + Label
-          </button>
-          {pickerOpen && (
-            <LabelPicker
-              labels={labelCatalog}
-              excludeIds={appliedLabelIds}
-              onSelect={(key, value) => {
-                onAddLabel(task.id, key, value);
-                setPickerOpen(false);
-              }}
-              onClose={() => setPickerOpen(false)}
-            />
+      {!collapsed && (
+        <>
+          {sessionSummary && (
+            <div className="task-sessions-summary muted">
+              {sessionSummary.count} {sessionSummary.count === 1 ? "session" : "sessions"} ·{" "}
+              {formatDuration(sessionSummary.totalMs)}
+              {sessionSummary.hasOpenSession && " (in progress)"}
+            </div>
           )}
-        </div>
-      </div>
 
-      <textarea
-        className="task-notes"
-        placeholder="Notes..."
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        onBlur={handleNotesBlur}
-      />
+          <div className="task-labels">
+            {task.labels.map((label) => (
+              <span key={label.id} className="label-chip">
+                {label.key}:{label.value}
+                <button
+                  type="button"
+                  className="label-chip-remove"
+                  onClick={() => onRemoveLabel(task.id, label.id)}
+                  aria-label={`Remove label ${label.key}:${label.value}`}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            <div className="label-add-wrap">
+              <button type="button" className="label-add-btn" onClick={() => setPickerOpen((v) => !v)}>
+                + Label
+              </button>
+              {pickerOpen && (
+                <LabelPicker
+                  labels={labelCatalog}
+                  excludeIds={appliedLabelIds}
+                  onSelect={(key, value) => {
+                    onAddLabel(task.id, key, value);
+                    setPickerOpen(false);
+                  }}
+                  onClose={() => setPickerOpen(false)}
+                />
+              )}
+            </div>
+          </div>
+
+          <textarea
+            className="task-notes"
+            placeholder="Notes..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            onBlur={handleNotesBlur}
+          />
+        </>
+      )}
 
       {editOpen && (
         <TaskEditModal

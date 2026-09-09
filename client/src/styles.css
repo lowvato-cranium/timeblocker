@@ -282,6 +282,29 @@ select:focus {
   border-left-color: var(--danger);
 }
 
+/* Priority top bar — independent of the status-driven left border above.
+   Only tasks carrying a recognized "priority:<n>-..." label get the
+   thicker colored top edge; everything else keeps the default thin border. */
+.task-row.priority-1 {
+  border-top: 4px solid var(--danger);
+}
+
+.task-row.priority-2 {
+  border-top: 4px solid var(--warning);
+}
+
+.task-row.priority-3 {
+  border-top: 4px solid var(--text-muted);
+}
+
+.task-row.priority-5 {
+  border-top: 4px solid var(--accent);
+}
+
+.task-row-collapsed {
+  gap: 0;
+}
+
 .task-row-main {
   display: flex;
   align-items: center;
@@ -319,7 +342,8 @@ select:focus {
   border: none;
 }
 
-.task-edit-btn {
+.task-edit-btn,
+.task-collapse-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -331,7 +355,8 @@ select:focus {
   line-height: 1;
 }
 
-.task-edit-btn:hover {
+.task-edit-btn:hover,
+.task-collapse-btn:hover {
   color: var(--accent);
   border: none;
   background: var(--panel-alt);
