@@ -153,6 +153,20 @@ export function TimerPanel({ onAddTask, onTimerEnd, onWorkStart, onWorkEnd, onPh
     <section className="timer-panel">
       <h2>Focus Timer</h2>
 
+      <form className="add-task-form" onSubmit={handleAddTask}>
+        <label>
+          Task
+          <input
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="What are you working on?"
+          />
+        </label>
+        <button type="submit" disabled={!description.trim()}>
+          Add task
+        </button>
+      </form>
+
       <div className="timer-settings">
         <label>
           Work (min)
@@ -258,20 +272,6 @@ export function TimerPanel({ onAddTask, onTimerEnd, onWorkStart, onWorkEnd, onPh
           </button>
         )}
       </div>
-
-      <form className="add-task-form" onSubmit={handleAddTask}>
-        <label>
-          Task
-          <input
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="What are you working on?"
-          />
-        </label>
-        <button type="submit" disabled={!description.trim()}>
-          Add task
-        </button>
-      </form>
     </section>
   );
 }

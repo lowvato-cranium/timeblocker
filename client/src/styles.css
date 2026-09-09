@@ -699,7 +699,6 @@ body.timer-pulse-other {
   gap: 0.75rem;
   align-items: flex-end;
   flex-wrap: wrap;
-  margin-top: auto;
 }
 
 .add-task-form label {
