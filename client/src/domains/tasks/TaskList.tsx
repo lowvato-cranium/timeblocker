@@ -97,12 +97,25 @@ export function TaskList({
   }, [labelCatalog, sortCategory]);
 
   // Active: every task with the Active checkbox on, regardless of status.
+  // Inbox: untriaged tasks — not active, no labels, no time logged yet.
+  // A freshly-created task starts here so it's easy to find and prioritize
+  // instead of getting lost among already-triaged Inactive tasks.
   // Inactive: everything else, except Complete and Rejected/Won't Do —
-  // those drop out of both panels once they're done or discarded.
+  // those drop out of every panel once they're done or discarded.
   const activeTasks = useMemo(() => tasks.filter((t) => t.active), [tasks]);
 
+  const untriagedBase = useMemo(
+    () => tasks.filter((t) => !t.active && t.status !== "complete" && t.status !== "rejected"),
+    [tasks]
+  );
+
+  const inboxTasks = useMemo(
+    () => untriagedBase.filter((t) => t.labels.length === 0 && t.sessions.length === 0),
+    [untriagedBase]
+  );
+
   const inactiveTasks = useMemo(() => {
-    const base = tasks.filter((t) => !t.active && t.status !== "complete" && t.status !== "rejected");
+    const base = untriagedBase.filter((t) => t.labels.length > 0 || t.sessions.length > 0);
 
     const withLabel: { task: Task; value: string }[] = [];
     const withoutLabel: Task[] = [];
@@ -118,7 +131,7 @@ export function TaskList({
     // than flipping them to the front on Descending, which would read as
     // "highest priority" and bury the actually-labeled tasks.
     return [...withLabel.map((w) => w.task), ...withoutLabel];
-  }, [tasks, sortCategory, sortAscending]);
+  }, [untriagedBase, sortCategory, sortAscending]);
 
   const rowProps = { labelCatalog, onUpdate, onRemove, onAddLabel, onRemoveLabel, onSetActive, onAddSession };
 
@@ -132,6 +145,12 @@ export function TaskList({
             title="Active"
             tasks={activeTasks}
             emptyMessage="No active tasks. Check a task's Active box to start tracking it here."
+            {...rowProps}
+          />
+          <TaskGroup
+            title="Inbox"
+            tasks={inboxTasks}
+            emptyMessage="Nothing to triage — every task has a label or logged time."
             {...rowProps}
           />
           <TaskGroup
