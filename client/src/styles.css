@@ -803,6 +803,30 @@ body.timer-pulse-other {
   margin-top: 0;
 }
 
+.reports-view-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.reports-view-toggle button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.reports-view-toggle button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0b0e14;
+  font-weight: 600;
+}
+
+.daily-log-total {
+  margin-top: 0.75rem;
+  font-weight: 600;
+}
+
 .reports-toolbar {
   display: flex;
   align-items: flex-end;

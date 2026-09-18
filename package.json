@@ -12,7 +12,8 @@
     "start": "npm run start -w server",
     "db:generate": "npm run db:generate -w server",
     "db:studio": "npm run db:studio -w server",
-    "user:create": "npm run user:create -w server --"
+    "user:create": "npm run user:create -w server --",
+    "user:reset-password": "npm run user:reset-password -w server --"
   },
   "devDependencies": {
     "concurrently": "^9.0.1",

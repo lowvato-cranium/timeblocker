@@ -11,9 +11,9 @@ import {
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { formatDateTime } from "../../shared/format";
+import { formatDateTime, formatDuration, formatTime, toDateInputValue } from "../../shared/format";
 import { tasksApi } from "./api";
-import { STATUS_LABELS, TASK_STATUSES, type Task } from "./types";
+import { STATUS_LABELS, TASK_STATUSES, type Task, type TaskSession } from "./types";
 
 const columnHelper = createColumnHelper<Task>();
 
@@ -77,9 +77,94 @@ function ColumnFilter({ column }: { column: Column<Task, unknown> }) {
   );
 }
 
+interface SessionRow {
+  session: TaskSession;
+  task: Task;
+}
+
+// A day's sessions, oldest first, joined back to their owning task —
+// the unit the Daily Log reports on is the session, not the task.
+function sessionsForDay(tasks: Task[], dateStr: string): SessionRow[] {
+  const dayStart = new Date(`${dateStr}T00:00:00`).getTime();
+  const dayEnd = new Date(`${dateStr}T23:59:59.999`).getTime();
+  const rows: SessionRow[] = [];
+  for (const task of tasks) {
+    for (const session of task.sessions) {
+      if (session.startedAt >= dayStart && session.startedAt <= dayEnd) {
+        rows.push({ session, task });
+      }
+    }
+  }
+  return rows.sort((a, b) => a.session.startedAt - b.session.startedAt);
+}
+
+function DailyLogView({ tasks }: { tasks: Task[] }) {
+  const [date, setDate] = useState(() => toDateInputValue(new Date()));
+  const rows = useMemo(() => sessionsForDay(tasks, date), [tasks, date]);
+  const totalMs = useMemo(() => {
+    const now = Date.now();
+    return rows.reduce((sum, { session }) => sum + ((session.endedAt ?? now) - session.startedAt), 0);
+  }, [rows]);
+
+  return (
+    <div className="daily-log">
+      <div className="reports-toolbar">
+        <label>
+          Day
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </label>
+        <button type="button" onClick={() => setDate(toDateInputValue(new Date()))}>
+          Today
+        </button>
+      </div>
+
+      <div className="reports-table-wrap">
+        <table className="reports-table">
+          <thead>
+            <tr>
+              <th>Start</th>
+              <th>End</th>
+              <th>Duration</th>
+              <th>Task</th>
+              <th>Status</th>
+              <th>Labels</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ session, task }) => (
+              <tr key={session.id}>
+                <td>{formatTime(session.startedAt)}</td>
+                <td>{session.endedAt ? formatTime(session.endedAt) : "ongoing"}</td>
+                <td>{formatDuration((session.endedAt ?? Date.now()) - session.startedAt)}</td>
+                <td>{task.description}</td>
+                <td>{STATUS_LABELS[task.status]}</td>
+                <td>{task.labels.map((l) => `${l.key}:${l.value}`).join(", ")}</td>
+              </tr>
+            ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={6} className="muted">
+                  No sessions on this day.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {rows.length > 0 && (
+        <p className="daily-log-total">
+          Total: {formatDuration(totalMs)} across {rows.length} session{rows.length === 1 ? "" : "s"}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function ReportsPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<"daily" | "tasks">("daily");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
@@ -123,33 +208,53 @@ export function ReportsPage() {
       </header>
 
       <div className="reports-body">
-        <h2>Task Report</h2>
-
-        <div className="reports-toolbar">
-          <label>
-            From
-            <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-          </label>
-          <label>
-            To
-            <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
-          </label>
-          {(fromDate || toDate) && (
-            <button
-              onClick={() => {
-                setFromDate("");
-                setToDate("");
-              }}
-            >
-              Clear dates
-            </button>
-          )}
+        <div className="reports-view-toggle">
+          <button
+            type="button"
+            className={view === "daily" ? "active" : ""}
+            onClick={() => setView("daily")}
+          >
+            Daily Log
+          </button>
+          <button
+            type="button"
+            className={view === "tasks" ? "active" : ""}
+            onClick={() => setView("tasks")}
+          >
+            Task Table
+          </button>
         </div>
 
         {loading ? (
           <p className="muted">Loading...</p>
+        ) : view === "daily" ? (
+          <DailyLogView tasks={tasks} />
         ) : (
-          <div className="reports-table-wrap">
+          <>
+            <h2>Task Report</h2>
+
+            <div className="reports-toolbar">
+              <label>
+                From
+                <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+              </label>
+              <label>
+                To
+                <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+              </label>
+              {(fromDate || toDate) && (
+                <button
+                  onClick={() => {
+                    setFromDate("");
+                    setToDate("");
+                  }}
+                >
+                  Clear dates
+                </button>
+              )}
+            </div>
+
+            <div className="reports-table-wrap">
             <table className="reports-table">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -188,7 +293,8 @@ export function ReportsPage() {
                 )}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </div>
     </div>

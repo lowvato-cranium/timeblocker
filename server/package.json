@@ -9,7 +9,8 @@
     "start": "node dist/index.js",
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
-    "user:create": "tsx src/scripts/createUser.ts"
+    "user:create": "tsx src/scripts/createUser.ts",
+    "user:reset-password": "tsx src/scripts/resetPassword.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

@@ -20,6 +20,17 @@ export const authService = {
     return { id: user.id, username: user.username };
   },
 
+  // Also invalidates existing sessions, so a compromised password can't
+  // still be used to act as the user after the reset.
+  resetPassword(username: string, newPassword: string): AuthUser {
+    const user = authRepository.findUserByUsername(username);
+    if (!user) throw new Error(`User "${username}" not found`);
+
+    authRepository.updatePasswordHash(user.id, hashPassword(newPassword));
+    authRepository.deleteSessionsForUser(user.id);
+    return { id: user.id, username: user.username };
+  },
+
   login(username: string, password: string): { user: AuthUser; sessionId: string; expiresAt: number } {
     const user = authRepository.findUserByUsername(username);
     if (!user || !verifyPassword(password, user.passwordHash)) {

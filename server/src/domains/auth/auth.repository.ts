@@ -15,6 +15,10 @@ export const authRepository = {
     db.insert(users).values(user).run();
   },
 
+  updatePasswordHash(userId: string, passwordHash: string) {
+    db.update(users).set({ passwordHash }).where(eq(users.id, userId)).run();
+  },
+
   createSession(session: { id: string; userId: string; expiresAt: number; createdAt: number }) {
     db.insert(sessions).values(session).run();
   },
@@ -25,6 +29,10 @@ export const authRepository = {
 
   deleteSession(id: string) {
     db.delete(sessions).where(eq(sessions.id, id)).run();
+  },
+
+  deleteSessionsForUser(userId: string) {
+    db.delete(sessions).where(eq(sessions.userId, userId)).run();
   },
 
   deleteExpiredSessions(now: number) {
