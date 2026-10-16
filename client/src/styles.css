@@ -842,6 +842,21 @@ body.timer-pulse-other {
   color: var(--text-muted);
 }
 
+/* Overrides the stacked label layout above: a checkbox reads better beside
+   its text than under it, aligned with the toolbar's other controls. */
+.daily-log-rollup {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.4rem !important;
+  padding-bottom: 0.4rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.daily-log-rollup input {
+  accent-color: var(--accent);
+}
+
 .reports-table-wrap {
   overflow-x: auto;
   border: 1px solid var(--border);
@@ -1017,4 +1032,80 @@ body.timer-pulse-other {
   gap: 0.6rem;
   padding: 1rem 1.25rem;
   border-top: 1px solid var(--border);
+}
+
+/* On-page nav — floats on the right edge, vertically centered. Icon-only
+   at rest so the thin strip never obstructs the page; each button reveals
+   its label in a flyout to the left on hover/focus instead of widening. */
+.page-nav {
+  position: fixed;
+  right: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.4rem;
+  background: rgba(28, 31, 40, 0.7);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+
+.page-nav:hover,
+.page-nav:focus-within {
+  opacity: 1;
+}
+
+.page-nav-btn {
+  position: relative;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.page-nav-btn:hover,
+.page-nav-btn:focus-visible {
+  background: var(--panel-alt);
+  border: none;
+  color: var(--accent);
+}
+
+.page-nav-label {
+  position: absolute;
+  right: calc(100% + 0.5rem);
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: var(--text);
+  background: var(--panel-alt);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.2rem 0.55rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s ease;
+}
+
+.page-nav-btn:hover .page-nav-label,
+.page-nav-btn:focus-visible .page-nav-label {
+  opacity: 1;
+}
+
+@media (max-width: 760px) {
+  .page-nav {
+    right: 0.5rem;
+  }
 }

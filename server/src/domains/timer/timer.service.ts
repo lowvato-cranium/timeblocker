@@ -1,5 +1,6 @@
 import { ValidationError } from "../../shared/errors.js";
 import { timerRepository } from "./timer.repository.js";
+import { deleteSound, discardUpload, isWavFile, promoteSound } from "./timer.storage.js";
 import { NOTIFICATION_MODES, type NotificationMode, type TimerSettings } from "./timer.types.js";
 
 const DEFAULT_SETTINGS: Omit<TimerSettings, "customSoundFilename"> & { customSoundFilename: null } = {
@@ -38,17 +39,30 @@ export const timerService = {
     return timerRepository.upsert(userId, values);
   },
 
-  // Returns the filename that was previously in use (if any) so the caller
-  // can delete that file from disk now that it's no longer referenced.
-  setCustomSound(userId: string, filename: string): { settings: TimerSettings; previousFilename: string | null } {
+  // Owns the whole replacement rule: validate the staged upload, move it
+  // into the served directory, point the user's settings at it, and only
+  // then drop the file it replaced — so a failure at any step leaves the
+  // previous sound both on disk and referenced.
+  setCustomSound(userId: string, tempPath: string): TimerSettings {
+    if (!isWavFile(tempPath)) {
+      discardUpload(tempPath);
+      throw new ValidationError("File content is not a valid WAV file");
+    }
+
     const previousFilename = timerRepository.find(userId)?.customSoundFilename ?? null;
-    const settings = timerRepository.upsert(userId, { customSoundFilename: filename, notificationMode: "sound" });
-    return { settings, previousFilename };
+    const filename = promoteSound(tempPath, userId);
+    const settings = timerRepository.upsert(userId, {
+      customSoundFilename: filename,
+      notificationMode: "sound",
+    });
+    deleteSound(previousFilename);
+    return settings;
   },
 
-  clearCustomSound(userId: string): { settings: TimerSettings; previousFilename: string | null } {
+  clearCustomSound(userId: string): TimerSettings {
     const previousFilename = timerRepository.find(userId)?.customSoundFilename ?? null;
     const settings = timerRepository.upsert(userId, { customSoundFilename: null });
-    return { settings, previousFilename };
+    deleteSound(previousFilename);
+    return settings;
   },
 };

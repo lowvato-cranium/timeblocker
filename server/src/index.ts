@@ -6,7 +6,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
-import { CORS_ORIGIN, IS_PRODUCTION, PORT } from "./config.js";
+import { CORS_ORIGIN, IS_PRODUCTION, PORT, SOUNDS_DIR } from "./config.js";
 import { authRouter } from "./domains/auth/auth.routes.js";
 import { requireAuth } from "./domains/auth/auth.middleware.js";
 import { labelsRouter } from "./domains/labels/labels.routes.js";
@@ -37,9 +37,9 @@ app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
 });
 
-const soundsDir = path.resolve(process.cwd(), "data", "uploads", "sounds");
-fs.mkdirSync(soundsDir, { recursive: true });
-app.use("/uploads/sounds", requireAuth, express.static(soundsDir));
+// The timer domain creates this directory on import; serving it here keeps
+// the static mount (and its auth guard) with the rest of the app's wiring.
+app.use("/uploads/sounds", requireAuth, express.static(SOUNDS_DIR));
 
 if (IS_PRODUCTION) {
   const clientDist = path.resolve(process.cwd(), "../client/dist");

@@ -42,19 +42,21 @@ function compareLabelValues(a: string, b: string): number {
 }
 
 function TaskGroup({
+  id,
   title,
   headerExtra,
   tasks,
   emptyMessage,
   ...rowProps
 }: {
+  id?: string;
   title: string;
   headerExtra?: ReactNode;
   tasks: Task[];
   emptyMessage: string;
 } & Omit<Props, "tasks" | "loading">) {
   return (
-    <div className="task-group">
+    <div className="task-group" id={id}>
       <div className="task-group-header">
         <h3>{title}</h3>
         {headerExtra}
@@ -148,12 +150,14 @@ export function TaskList({
             {...rowProps}
           />
           <TaskGroup
+            id="inbox-section"
             title="Inbox"
             tasks={inboxTasks}
             emptyMessage="Nothing to triage — every task has a label or logged time."
             {...rowProps}
           />
           <TaskGroup
+            id="priority-section"
             title="Inactive"
             tasks={inactiveTasks}
             emptyMessage="Nothing here."

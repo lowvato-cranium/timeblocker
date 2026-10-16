@@ -1,11 +1,45 @@
 import { nanoid } from "nanoid";
 import { NotFoundError, ValidationError } from "../../shared/errors.js";
+import { labelsService } from "../labels/labels.service.js";
 import { tasksRepository } from "./tasks.repository.js";
 import { TASK_STATUSES, type TaskSession, type TaskStatus } from "./tasks.types.js";
 
+type TaskRow = NonNullable<ReturnType<typeof tasksRepository.findById>>;
+
+// statusChangedAt is nullable in the schema (so the column could be added
+// without a default), but every caller treats it as a timestamp. Falling
+// back to createdAt here — the same value migration 0001 backfilled with —
+// means the API never hands the client a null it isn't typed for.
+function serialize(task: TaskRow) {
+  return { ...task, statusChangedAt: task.statusChangedAt ?? task.createdAt };
+}
+
 export const tasksService = {
   list(userId: string) {
-    return tasksRepository.listByUser(userId);
+    return tasksRepository.listByUser(userId).map(serialize);
+  },
+
+  // Tasks with their labels and sessions attached — the shape every task
+  // endpoint returns. Composing the two domains is a service concern, so
+  // the routes stay a thin HTTP layer over a single call.
+  listWithRelations(userId: string) {
+    const tasks = tasksRepository.listByUser(userId);
+    const taskIds = tasks.map((t) => t.id);
+    const labelsByTask = labelsService.forTasks(taskIds);
+    const sessionsByTask = this.sessionsForTasks(taskIds);
+    return tasks.map((task) => ({
+      ...serialize(task),
+      labels: labelsByTask.get(task.id) ?? [],
+      sessions: sessionsByTask.get(task.id) ?? [],
+    }));
+  },
+
+  withRelations(task: TaskRow) {
+    return {
+      ...serialize(task),
+      labels: labelsService.forTask(task.id),
+      sessions: tasksRepository.listSessionsForTask(task.id),
+    };
   },
 
   getOwned(userId: string, id: string) {
@@ -18,14 +52,16 @@ export const tasksService = {
     const trimmed = description.trim();
     if (!trimmed) throw new ValidationError("Task description is required");
     const now = Date.now();
-    return tasksRepository.create({
-      id: nanoid(),
-      userId,
-      description: trimmed,
-      createdAt: now,
-      updatedAt: now,
-      statusChangedAt: now,
-    });
+    return serialize(
+      tasksRepository.create({
+        id: nanoid(),
+        userId,
+        description: trimmed,
+        createdAt: now,
+        updatedAt: now,
+        statusChangedAt: now,
+      })
+    );
   },
 
   update(
@@ -65,7 +101,9 @@ export const tasksService = {
       update.active = patch.active;
     }
 
-    return tasksRepository.update(id, userId, update);
+    const updated = tasksRepository.update(id, userId, update);
+    if (!updated) throw new NotFoundError("Task not found");
+    return updated;
   },
 
   remove(userId: string, id: string) {

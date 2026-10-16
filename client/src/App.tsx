@@ -9,6 +9,19 @@ import { TaskList } from "./domains/tasks/TaskList";
 import { useTasks } from "./domains/tasks/useTasks";
 import { TimerPanel } from "./domains/timer/TimerPanel";
 import type { TimerPhase } from "./domains/timer/types";
+import { ArrowUpIcon, FlagIcon, InboxIcon, PageNav } from "./shared/PageNav";
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// Scrolls the target section into view, including nudging any ancestor
+// scroll container (the task list panel scrolls independently of the page
+// itself) — scrollIntoView walks both automatically. A no-op if the
+// section hasn't rendered yet (e.g. tasks are still loading).
+function scrollToSection(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 // Only mounted once `user` is confirmed, so its data-fetching hooks
 // (useTasks, TimerPanel's settings load) run after the session exists
@@ -115,6 +128,13 @@ function AuthenticatedApp({ user, onLogout }: { user: AuthUser; onLogout: () => 
         />
       </main>
       <RecentActivityPanel tasks={tasks} />
+      <PageNav
+        links={[
+          { key: "top", label: "Top", icon: <ArrowUpIcon />, onClick: scrollToTop },
+          { key: "inbox", label: "Inbox", icon: <InboxIcon />, onClick: () => scrollToSection("inbox-section") },
+          { key: "priority", label: "Priority", icon: <FlagIcon />, onClick: () => scrollToSection("priority-section") },
+        ]}
+      />
     </div>
   );
 }

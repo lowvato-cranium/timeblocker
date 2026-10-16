@@ -98,9 +98,51 @@ function sessionsForDay(tasks: Task[], dateStr: string): SessionRow[] {
   return rows.sort((a, b) => a.session.startedAt - b.session.startedAt);
 }
 
+interface RollupRow {
+  task: Task;
+  totalMs: number;
+  initialStart: number;
+  // null while any of the day's sessions for this task is still open.
+  finalEnd: number | null;
+  sessionCount: number;
+}
+
+// Collapses a day's sessions down to one row per task: time summed across
+// every session, bracketed by the earliest start and latest end. An open
+// session counts toward the total up to now (matching the per-session view)
+// and leaves finalEnd null, since the task hasn't actually finished.
+function rollupByTask(rows: SessionRow[], now: number): RollupRow[] {
+  const byTask = new Map<string, RollupRow>();
+  for (const { session, task } of rows) {
+    const end = session.endedAt;
+    const existing = byTask.get(task.id);
+    if (!existing) {
+      byTask.set(task.id, {
+        task,
+        totalMs: (end ?? now) - session.startedAt,
+        initialStart: session.startedAt,
+        finalEnd: end,
+        sessionCount: 1,
+      });
+      continue;
+    }
+    existing.totalMs += (end ?? now) - session.startedAt;
+    existing.initialStart = Math.min(existing.initialStart, session.startedAt);
+    existing.finalEnd = end === null || existing.finalEnd === null ? null : Math.max(existing.finalEnd, end);
+    existing.sessionCount += 1;
+  }
+  return Array.from(byTask.values()).sort((a, b) => a.initialStart - b.initialStart);
+}
+
+function labelsText(task: Task): string {
+  return task.labels.map((l) => `${l.key}:${l.value}`).join(", ");
+}
+
 function DailyLogView({ tasks }: { tasks: Task[] }) {
   const [date, setDate] = useState(() => toDateInputValue(new Date()));
+  const [rollup, setRollup] = useState(false);
   const rows = useMemo(() => sessionsForDay(tasks, date), [tasks, date]);
+  const rollupRows = useMemo(() => rollupByTask(rows, Date.now()), [rows]);
   const totalMs = useMemo(() => {
     const now = Date.now();
     return rows.reduce((sum, { session }) => sum + ((session.endedAt ?? now) - session.startedAt), 0);
@@ -116,45 +158,97 @@ function DailyLogView({ tasks }: { tasks: Task[] }) {
         <button type="button" onClick={() => setDate(toDateInputValue(new Date()))}>
           Today
         </button>
+        <label className="daily-log-rollup">
+          <input type="checkbox" checked={rollup} onChange={(e) => setRollup(e.target.checked)} />
+          Rollup
+        </label>
       </div>
 
       <div className="reports-table-wrap">
-        <table className="reports-table">
-          <thead>
-            <tr>
-              <th>Start</th>
-              <th>End</th>
-              <th>Duration</th>
-              <th>Task</th>
-              <th>Status</th>
-              <th>Labels</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(({ session, task }) => (
-              <tr key={session.id}>
-                <td>{formatTime(session.startedAt)}</td>
-                <td>{session.endedAt ? formatTime(session.endedAt) : "ongoing"}</td>
-                <td>{formatDuration((session.endedAt ?? Date.now()) - session.startedAt)}</td>
-                <td>{task.description}</td>
-                <td>{STATUS_LABELS[task.status]}</td>
-                <td>{task.labels.map((l) => `${l.key}:${l.value}`).join(", ")}</td>
-              </tr>
-            ))}
-            {rows.length === 0 && (
+        {rollup ? (
+          <table className="reports-table">
+            <thead>
               <tr>
-                <td colSpan={6} className="muted">
-                  No sessions on this day.
-                </td>
+                <th>Cumulative Duration</th>
+                <th>Initial Start</th>
+                <th>Final End</th>
+                <th>Task Name</th>
+                <th>Status</th>
+                <th>Description</th>
+                <th>Labels</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {rollupRows.map((row) => (
+                <tr key={row.task.id}>
+                  <td>
+                    {formatDuration(row.totalMs)}
+                    {row.sessionCount > 1 && <span className="muted"> ({row.sessionCount} sessions)</span>}
+                  </td>
+                  <td>{formatTime(row.initialStart)}</td>
+                  <td>{row.finalEnd === null ? "ongoing" : formatTime(row.finalEnd)}</td>
+                  <td>{row.task.description}</td>
+                  <td>{STATUS_LABELS[row.task.status]}</td>
+                  <td>{row.task.notes}</td>
+                  <td>{labelsText(row.task)}</td>
+                </tr>
+              ))}
+              {rollupRows.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="muted">
+                    No sessions on this day.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        ) : (
+          <table className="reports-table">
+            <thead>
+              <tr>
+                <th>Start</th>
+                <th>End</th>
+                <th>Duration</th>
+                <th>Task</th>
+                <th>Status</th>
+                <th>Labels</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(({ session, task }) => (
+                <tr key={session.id}>
+                  <td>{formatTime(session.startedAt)}</td>
+                  <td>{session.endedAt ? formatTime(session.endedAt) : "ongoing"}</td>
+                  <td>{formatDuration((session.endedAt ?? Date.now()) - session.startedAt)}</td>
+                  <td>{task.description}</td>
+                  <td>{STATUS_LABELS[task.status]}</td>
+                  <td>{labelsText(task)}</td>
+                </tr>
+              ))}
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="muted">
+                    No sessions on this day.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {rows.length > 0 && (
         <p className="daily-log-total">
-          Total: {formatDuration(totalMs)} across {rows.length} session{rows.length === 1 ? "" : "s"}
+          Total: {formatDuration(totalMs)} across{" "}
+          {rollup ? (
+            <>
+              {rollupRows.length} task{rollupRows.length === 1 ? "" : "s"}
+            </>
+          ) : (
+            <>
+              {rows.length} session{rows.length === 1 ? "" : "s"}
+            </>
+          )}
         </p>
       )}
     </div>
