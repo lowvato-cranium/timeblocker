@@ -1109,3 +1109,24 @@ body.timer-pulse-other {
     right: 0.5rem;
   }
 }
+
+/* Search — the input slides out to the left of the nav's search button. */
+.page-nav-search {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.page-nav-search-input {
+  position: absolute;
+  right: calc(100% + 0.5rem);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.search-match {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}

@@ -127,7 +127,7 @@ function AuthenticatedApp({ user, onLogout }: { user: AuthUser; onLogout: () => 
           onPhaseChange={handlePhaseChange}
         />
       </main>
-      <RecentActivityPanel tasks={tasks} />
+      <RecentActivityPanel tasks={tasks} onUpdate={updateTask} onAddSession={addSession} />
       <PageNav
         links={[
           { key: "top", label: "Top", icon: <ArrowUpIcon />, onClick: scrollToTop },

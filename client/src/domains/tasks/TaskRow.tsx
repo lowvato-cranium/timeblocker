@@ -112,7 +112,7 @@ export function TaskRow({
     .join(" ");
 
   return (
-    <li className={rowClassName}>
+    <li className={rowClassName} data-searchable>
       <div className="task-row-main">
         <input
           type="checkbox"

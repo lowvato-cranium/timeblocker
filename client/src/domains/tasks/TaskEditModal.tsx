@@ -1,12 +1,12 @@
 import { useEffect, useState, type FormEvent, type MouseEvent } from "react";
 import { ApiError } from "../../api/client";
 import { formatDateTime } from "../../shared/format";
-import type { Task } from "./types";
+import { STATUS_LABELS, TASK_STATUSES, type Task, type TaskStatus } from "./types";
 
 interface Props {
   task: Task;
   onClose: () => void;
-  onSave: (patch: { description: string; notes: string }) => Promise<void>;
+  onSave: (patch: { description: string; notes: string; status: TaskStatus }) => Promise<void>;
   onAddSession: (startedAt: number, endedAt: number) => Promise<void>;
 }
 
@@ -19,6 +19,7 @@ function toDatetimeLocalValue(ms: number): string {
 export function TaskEditModal({ task, onClose, onSave, onAddSession }: Props) {
   const [description, setDescription] = useState(task.description);
   const [notes, setNotes] = useState(task.notes);
+  const [status, setStatus] = useState<TaskStatus>(task.status);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -48,7 +49,7 @@ export function TaskEditModal({ task, onClose, onSave, onAddSession }: Props) {
     setSaving(true);
     setSaveError(null);
     try {
-      await onSave({ description: trimmed, notes });
+      await onSave({ description: trimmed, notes, status });
       onClose();
     } catch (err) {
       setSaveError(err instanceof ApiError ? err.message : "Save failed");
@@ -92,6 +93,16 @@ export function TaskEditModal({ task, onClose, onSave, onAddSession }: Props) {
           <label className="modal-field">
             Description
             <input value={description} onChange={(e) => setDescription(e.target.value)} />
+          </label>
+          <label className="modal-field">
+            Status
+            <select value={status} onChange={(e) => setStatus(e.target.value as TaskStatus)}>
+              {TASK_STATUSES.map((value) => (
+                <option key={value} value={value}>
+                  {STATUS_LABELS[value]}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="modal-field">
             Notes
